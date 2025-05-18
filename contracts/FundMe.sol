@@ -7,9 +7,9 @@ contract FundMe {
 
     using PriceConverter for uint256; // assign library for all uint256 type data
 
-    uint256 public MinimumUSD = 5e18;
+    uint256 public constant MinimumUSD = 5e18;
 
-    address public owner;
+    address public immutable owner;
 
     constructor() {
         owner = msg.sender;
@@ -19,7 +19,10 @@ contract FundMe {
     mapping (address funder => uint256 amountFunded) public addressToAmountFunded;
 
     function fund () public payable {
-        require(msg.value.getConventionalRate() >= MinimumUSD, "didn't send enough eth"); // reverts
+        // require(msg.value.getConventionalRate() >= MinimumUSD, "didn't send enough eth"); // reverts
+        if(msg.value.getConventionalRate() >= MinimumUSD) {
+            revert();
+        }
         funders.push(msg.sender);
         addressToAmountFunded[msg.sender] += msg.value ;
     }
@@ -38,12 +41,18 @@ contract FundMe {
 
         // this is the bestpractice
         (bool callSuccess, ) = payable(msg.sender).call{value: address(this).balance}(""); // call method, with destructuring
-        require(callSuccess, "call failed");
+        // require(callSuccess, "call failed");
+        if(callSuccess){
+            revert();
+        }
 
     }
 
     modifier onlyOwner () {
-        require(msg.sender == owner, "you're not the owner" );
+        // require(msg.sender == owner, "you're not the owner" );
+        if(msg.sender == owner){
+            revert();
+        }
         _;
     }
 
